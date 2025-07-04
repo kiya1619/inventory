@@ -1,0 +1,210 @@
+{% extends base_template %}
+
+{% block content %}
+<div class="item-detail-container">
+    <div class="item-header">
+        <div class="item-image">
+            {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="item-thumbnail">
+            {% else %}
+                <div class="no-image-placeholder">
+                    <i class="fas fa-box-open"></i>
+                </div>
+            {% endif %}
+        </div>
+        <div class="item-basic-info">
+            <h1 class="item-name">{{ item.name }}</h1>
+            <div class="item-sku">SKU: {{ item.product_number }}</div>
+        </div>
+    </div>
+
+    <div class="item-details-grid">
+        <div class="detail-card description-card">
+            <div class="detail-label">Description</div>
+            <div class="detail-value">{{ item.description|default:"Not provided" }}</div>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-label">Category</div>
+            <div class="detail-value">{{ item.category|default:"Not categorized" }}</div>
+        </div>
+
+        <div class="detail-card stock-card">
+            <div class="detail-label">Quantity in Stock</div>
+            <div class="detail-value">
+                <span class="stock-quantity">{{ item.quantity_in_stock }}</span>
+                <span class="unit">units</span>
+            </div>
+        </div>
+
+        <div class="detail-card price-card">
+            <div class="detail-label">Unit Price</div>
+            <div class="detail-value price">{{ item.unit_price }} ETB</div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Base Styles */
+    .item-detail-container {
+        max-width: 900px;
+        margin: 20px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    /* Header Section */
+    .item-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 40px;
+        padding-bottom: 25px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .item-image {
+        margin-right: 30px;
+        flex-shrink: 0;
+    }
+
+    .item-thumbnail {
+        width: 180px;
+        height: 180px;
+        object-fit: contain;
+        border-radius: 10px;
+        border: 1px solid #eaeaea;
+        background: #f9f9f9;
+        padding: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .no-image-placeholder {
+        width: 180px;
+        height: 180px;
+        background: #f5f7fa;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #a3a9b5;
+        font-size: 48px;
+        border: 2px dashed #d8dce6;
+    }
+
+    .item-name {
+        font-size: 28px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0 0 8px 0;
+    }
+
+    .item-sku {
+        color: #7f8c8d;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    /* Details Grid */
+    .item-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+    }
+
+    .detail-card {
+        background: #f9fafc;
+        border-radius: 10px;
+        padding: 20px;
+        border-left: 4px solid #4CAF50;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .detail-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .description-card {
+        grid-column: span 2;
+    }
+
+    .detail-label {
+        font-size: 14px;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .detail-value {
+        font-size: 18px;
+        color: #34495e;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
+    .stock-quantity {
+        font-size: 22px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .unit {
+        font-size: 16px;
+        color: #7f8c8d;
+        margin-left: 5px;
+    }
+
+    .price {
+        color: #27ae60;
+        font-weight: 600;
+        font-size: 22px;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .item-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .item-image {
+            margin-right: 0;
+            margin-bottom: 20px;
+        }
+        
+        .item-details-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .description-card {
+            grid-column: span 1;
+        }
+        
+        .item-thumbnail,
+        .no-image-placeholder {
+            width: 150px;
+            height: 150px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .item-thumbnail,
+        .no-image-placeholder {
+            width: 220px;
+            height: 120px;
+        }
+        
+        .item-name {
+            font-size: 24px;
+        }
+    }
+</style>
+
+<!-- Font Awesome for the placeholder icon -->
+
+{% endblock %}

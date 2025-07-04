@@ -1,0 +1,110 @@
+{% extends 'checker/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Register New Item</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="id_name" class="form-label">Name*</label>
+                        <input type="text" name="name" id="name" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                               value="{{ form.name.value|default:'' }}" required maxlength="100">
+                        {% for error in form.name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="id_product_number" class="form-label">Product Number*</label>
+                        <input type="text" name="product_number" id="id_product_number" 
+                               class="form-control {% if form.product_number.errors %}is-invalid{% endif %}" 
+                               value="{{ form.product_number.value|default:'' }}" required maxlength="100">
+                        {% for error in form.product_number.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_description" class="form-label">Description</label>
+                    <textarea name="description" id="id_description" rows="4" 
+                              class="form-control {% if form.description.errors %}is-invalid{% endif %}">{{ form.description.value|default:'' }}</textarea>
+                    {% for error in form.description.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="id_category" class="form-label">Category</label>
+                        <select name="category" id="id_category" class="form-select {% if form.category.errors %}is-invalid{% endif %}">
+                            <option value="" selected>---------</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if form.category.value == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                        {% for error in form.category.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="id_quantity_in_stock" class="form-label">Quantity In Stock*</label>
+                        <input type="number" name="quantity_in_stock" id="id_quantity_in_stock" 
+                               class="form-control {% if form.quantity_in_stock.errors %}is-invalid{% endif %}" 
+                               value="{{ form.quantity_in_stock.value|default:'0' }}" min="0" required>
+                        {% for error in form.quantity_in_stock.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="id_unit_price" class="form-label">Unit Price*</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" name="unit_price" id="id_unit_price" 
+                                   class="form-control {% if form.unit_price.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.unit_price.value|default:'' }}" min="0" step="0.01" required>
+                        </div>
+                        {% for error in form.unit_price.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_image" class="form-label">Image</label>
+                    <input type="file" name="image" id="id_image" 
+                           class="form-control {% if form.image.errors %}is-invalid{% endif %}" accept="image/*">
+                    {% for error in form.image.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                    <small class="text-muted">Max file size: 2MB. Allowed formats: JPG, PNG, GIF.</small>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-save me-2"></i>Register Item
+                    </button>
+                        <a href="{% url 'item_list' %}" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-x-circle me-2"></i>List of Items
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

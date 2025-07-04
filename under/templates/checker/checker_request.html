@@ -1,0 +1,164 @@
+{% extends 'checker/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Status Filter Dropdown -->
+    <div class="mb-3">
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="statusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Filter by Status
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="statusDropdown">
+                <li><a class="dropdown-item" href="{% url 'checker_requests' %}">All</a></li>
+                <li><a class="dropdown-item" href="?status=Pending">Pending</a></li>
+                <li><a class="dropdown-item" href="?status=Approved">Approved</a></li>
+                <li><a class="dropdown-item" href="?status=Rejected">Rejected</a></li>
+            </ul>
+        </div>
+        {% if request.GET.status %}
+            <p class="text-sm mt-2">Filtering by status: <strong>{{ request.GET.status|title }}</strong></p>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Stock Requests</h6>
+                    <p class="text-sm mb-0">Review and manage all stock requests</p>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Request ID</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Requester</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Department</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Item</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Quantity</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Request Date</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Approved/ Rejected  By</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in stock_requests %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm">#{{ request.id }}</h6>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm">{{ request.department_user }}</h6>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><p class="text-xs font-weight-bold mb-0">{{ request.department }}</p></td>
+                                    <td><p class="text-xs font-weight-bold mb-0">{{ request.item }}</p></td>
+                                    <td><p class="text-xs font-weight-bold mb-0">{{ request.requested_quantity }}</p></td>
+                                    <td><span class="text-secondary text-xs font-weight-bold">{{ request.request_date}}</span></td>
+                                    <td><p class="text-secondary text-xs font-weight-bold">{{ request.approved_by }} on {{ request.approved_date }}</p></td>
+                                    
+                                    <td class="align-middle">
+                                        {% if request.status == 'Approved' %}
+                                            <span class="badge badge-sm bg-gradient-success">Approved</span>
+                                        {% elif request.status == 'Rejected' %}
+                                            <span class="badge badge-sm bg-danger">Rejected</span>
+                                        {% elif request.status == 'Pending' %}
+                                            <span class="badge badge-sm bg-gradient-warning">Pending</span>
+                                        {% elif request.status == 'Fulfilled' %}
+                                            <span class="badge badge-sm bg-gradient-info">Fulfilled</span>
+                                        {% else %}
+                                            <span class="badge badge-sm bg-gradient-secondary">Unknown</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle">
+                                        {% if request.status == 'Pending' %}
+                                            <a href="{% url 'viewitems' request.id %}" class="btn btn-sm btn-primary px-3 mb-0">
+                                                <i class="fas fa-check me-2"></i>View
+                                            </a>
+                                        {% elif request.status == 'Approved' %}
+                                            <a href="{% url 'view_approved' request.id %}" class="btn btn-sm btn-success px-3 mb-0">
+                                                <i class="fas fa-eye me-2"></i>View Approved
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'view_rejected' request.id %}" class="btn btn-sm btn-secondary px-3 mb-0">
+                                                <i class="fas fa-eye me-2"></i>View Rejected 
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">No stock requests found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-header {
+        background-color: #fff;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .table thead th {
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        background-color: #f8f9fa;
+    }
+
+    .badge-sm {
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        line-height: 1;
+        font-weight: 600;
+    }
+
+    .bg-gradient-success {
+        background: linear-gradient(310deg, #2dce89 0%, #2dcecc 100%);
+    }
+
+    .bg-gradient-danger {
+        background: linear-gradient(310deg, #f53939 0%, #fbcf33 100%);
+    }
+
+    .bg-gradient-warning {
+        background: linear-gradient(310deg, #fb6340 0%, #fbb140 100%);
+    }
+
+    .bg-gradient-info {
+        background: linear-gradient(310deg, #11cdef 0%, #1171ef 100%);
+    }
+
+    .btn-link {
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+
+    .btn-link:hover {
+        opacity: 0.8;
+    }
+</style>
+{% endblock %}

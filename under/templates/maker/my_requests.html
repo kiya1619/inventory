@@ -1,0 +1,191 @@
+{% extends 'maker/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Stock Requests</h1>
+    
+    <!-- Search form -->
+    <form method="get" class="mb-3 d-flex" role="search" aria-label="Search stock requests">
+        <input
+            type="search"
+            name="q"
+            class="form-control me-2"
+            placeholder="Search requests..."
+            value="{{ request.GET.q|default:'' }}"
+            aria-label="Search"
+        >
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+
+        <!-- Preserve the status filter when searching -->
+        {% if request.GET.status %}
+            <input type="hidden" name="status" value="{{ request.GET.status }}">
+        {% endif %}
+    </form>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">All Requests</h5>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Filter
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                        <li><a class="dropdown-item" href="?status=pending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Pending</a></li>
+                        <li><a class="dropdown-item" href="?status=approved{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Approved</a></li>
+                        <li><a class="dropdown-item" href="?status=rejected{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Rejected</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="?{% if request.GET.q %}q={{ request.GET.q }}{% endif %}">All Requests</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Requested By</th>
+                            <th>Department</th>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Request Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in stock_requests %}
+                        <tr>
+                            <td>{{ request.request_id }}</td>
+                            <td>{{ request.department_user.get_full_name}}</td>
+                            <td>{{ request.department.name }}</td>
+                            <td>{{ request.item.name }}</td>
+                            <td>{{ request.requested_quantity }}</td>
+                            <td>{{ request.request_date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if request.status == 'Approved' %}bg-success
+                                    {% elif request.status == 'Rejected' %}bg-danger
+                                    {% else %}bg-warning text-dark{% endif %}">
+                                    {{ request.status|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detailModal{{ forloop.counter }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Detail Modal -->
+                        <div class="modal fade" id="detailModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="detailModalLabel">Request Details #{{ forloop.counter }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <h6>Requester Information</h6>
+                                            <p class="mb-1"><strong>Name:</strong> {{ request.department_user.get_full_name|default:request.department_user.username }}</p>
+                                            <p><strong>Department:</strong> {{ request.department.name }}</p>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <h6>Request Details</h6>
+                                            <p class="mb-1"><strong>Item:</strong> {{ request.item.name }}</p>
+                                            <p class="mb-1"><strong>Quantity:</strong> {{ request.requested_quantity }}</p>
+                                            <p class="mb-1"><strong>Request Date:</strong> {{ request.request_date|date:"M d, Y H:i" }}</p>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <h6>Reason</h6>
+                                            <p>{{ request.reason|linebreaks }}</p>
+                                        </div>
+                                        
+                                        <div>
+                                            <h6>Status</h6>
+                                            <span class="badge 
+                                                {% if request.status == 'Approved' %}bg-success
+                                                {% elif request.status == 'Rejected' %}bg-danger
+                                                {% else %}bg-warning text-dark{% endif %}">
+                                                {{ request.status|title }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        {% if request.status == 'pending' %}
+                                        <button type="button" class="btn btn-success">Approve</button>
+                                        <button type="button" class="btn btn-danger">Reject</button>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">No stock requests found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-4">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th {
+        font-weight: 600;
+        color: #495057;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+</style>
+{% endblock content %}

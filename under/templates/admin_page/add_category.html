@@ -1,0 +1,60 @@
+{% extends "admin_page/base.html" %}
+
+{% block content %}
+<!-- Add this inside <head> -->
+
+<div class="container mt-4">
+   {% if messages %}
+<div>
+    {% for message in messages %}
+    {% if message.tags == 'debug' %}
+    <div class="alert alert-secondary">{{ message }}</div>
+    {% elif message.tags == 'info' %}
+    <div class="alert alert-info">{{ message }}</div>
+    {% elif message.tags == 'success' %}
+    <div class="alert alert-success">{{ message }}</div>
+    {% elif message.tags == 'warning' %}
+    <div class="alert alert-warning">{{ message }}</div>
+    {% elif message.tags == 'error' %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% else %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Add / Edit Category</h3>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="id_name" class="form-label">Category Name</label>
+                    <input type="text" name="name" maxlength="100" required class="form-control" id="id_name">
+                </div>
+                <div class="mb-3">
+                    <label for="id_description" class="form-label">Description</label>
+                    <textarea name="description" class="form-control" id="id_description" rows="4"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Save</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    // Wait until the DOM is loaded
+    document.addEventListener('DOMContentLoaded', function () {
+        const alerts = document.querySelectorAll('.alert');
+
+        alerts.forEach(function(alert) {
+            setTimeout(function () {
+                alert.style.transition = "opacity 0.5s ease";
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 500); // remove after fade out
+            }, 4000); // 4000 milliseconds = 4 seconds
+        });
+    });
+</script>
+{% endblock %}

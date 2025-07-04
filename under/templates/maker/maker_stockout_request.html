@@ -1,0 +1,58 @@
+{% extends 'maker/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    {% if messages %}
+            <div>
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+
+                {% endfor %}
+            </div>
+            {% endif %}
+    <h2 class="mb-4">Stock Request Form</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="item">Item</label>
+            <select name="item" id="item" class="form-control" required>
+                <option value="" disabled selected>Select an item</option>
+                {% for item in items %}
+                
+                    <option value="{{ item.id }}">{{ item.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="requested_quantity">Requested Quantity</label>
+            <input type="number" name="requested_quantity" id="requested_quantity" class="form-control" required min="1">
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="reason">Reason</label>
+            <textarea name="reason" id="reason" class="form-control" rows="4" placeholder="Enter reason for the request..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-4">Submit Request</button>
+    </form>
+</div>
+<script>
+    // Wait until the DOM is loaded
+    document.addEventListener('DOMContentLoaded', function () {
+        const alerts = document.querySelectorAll('.alert');
+
+        alerts.forEach(function(alert) {
+            setTimeout(function () {
+                alert.style.transition = "opacity 0.5s ease";
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 500); // remove after fade out
+            }, 4000); // 4000 milliseconds = 4 seconds
+        });
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends 'checker/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Card Container -->
+    <div class="card shadow">
+        <!-- Card Header -->
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Pending Stock Requests</h3>
+            <p class="mb-0">Review and approve inventory requests</p>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+            {% if requests %}
+            <!-- Requests Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Requester</th>
+                            <th>Department</th>
+                            <th>Item</th>
+                            <th>Requested Qty</th>
+                            <th>Reason</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in requests %}
+                        <tr>
+                            <td>{{ request.department_user.get_full_name|default:request.department_user.username }}</td>
+                            <td>{{ request.department.name }}</td>
+                            <td>{{ request.item.name }}</td>
+                            <td>{{ request.requested_quantity }} {{ request.item.unit }}</td>
+                            <td class="text-truncate" style="max-width: 200px;" title="{{ request.reason }}">
+                                {{ request.reason }}
+                            </td>
+                            <td>{{ request.request_date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge text-dark">{{ request.status }}</span>
+                            </td>
+                            <td>
+                                {% if request.status == "Pending" %}
+                                <!-- Approval Form -->
+                                <form method="post" action="{% url 'approve_request' request.id %}" class="d-flex gap-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="approve">
+                                    <input type="number" 
+                                           name="approved_quantity" 
+                                           class="form-control form-control-sm" 
+                                           style="width: 80px;"
+                                           min="1" 
+                                           max="{{ request.requested_quantity }}"
+                                           value="{{ request.requested_quantity }}" 
+                                           required>
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-info" 
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#detailModal{{ request.id }}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </form>
+
+                                <!-- Reject Button (Separate Form) -->
+                                <form method="post" action="{% url 'reject_request' request.id %}" class="mt-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit" class="btn btn-danger btn-sm w-100">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                </form>
+                                {% else %}
+                                <!-- View Only -->
+                                <button type="button" 
+                                        class="btn btn-sm btn-info w-100" 
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#detailModal{{ request.id }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i> There are currently no pending stock requests.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modals -->
+{% for request in requests %}
+<div class="modal fade" id="detailModal{{ request.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Request Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Requester Information</h6>
+                        <p><strong>Name:</strong> {{ request.department_user.get_full_name|default:request.department_user.username }}</p>
+                        <p><strong>Department:</strong> {{ request.department.name }}</p>
+                        <p><strong>Request Date:</strong> {{ request.request_date|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Item Information</h6>
+                        <p><strong>Item:</strong> {{ request.item.name }}</p>
+                        <p><strong>Current Stock:</strong> {{ request.item.quantity }} {{ request.item.unit }}</p>
+                        <p><strong>Requested Quantity:</strong> {{ request.requested_quantity }} {{ request.item.unit }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <h6>Reason for Request</h6>
+                    <div class="border p-3 rounded bg-light">
+                        {{ request.reason|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer with Actions -->
+            {% if request.status == "Pending" %}
+            <div class="modal-footer">
+                <form method="post" action="{% url 'approve_request' request.id %}" class="w-100">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <div class="input-group" style="max-width: 200px;">
+                            <input type="number" 
+                                   name="approved_quantity" 
+                                   class="form-control" 
+                                   min="1" 
+                                   max="{{ request.requested_quantity }}"
+                                   value="{{ request.requested_quantity }}" 
+                                   required>
+                            <span class="input-group-text">{{ request.item.unit }}</span>
+                        </div>
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-success flex-grow-1">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button type="submit" 
+                                class="btn btn-danger" 
+                                formaction="{% url 'reject_request' request.id %}" 
+                                name="action" 
+                                value="reject">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- CSS Styles -->
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    .table th {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+    .badge {
+        font-size: 0.85em;
+        padding: 0.35em 0.65em;
+    }
+    .text-truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .modal-content {
+        border-radius: 10px;
+    }
+    .modal-header {
+        border-radius: 10px 10px 0 0;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

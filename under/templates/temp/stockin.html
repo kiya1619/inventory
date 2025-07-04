@@ -1,0 +1,139 @@
+{% extends 'temp/base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0"><i class="fas fa-boxes mr-2"></i>Stock In Item</h2>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- Item Selection -->
+                <div class="form-group mb-4">
+                    <label for="item" class="form-label fw-bold">Select Item</label>
+                    <select name="item" class="form-select form-control-lg" required>
+                        <option value="" selected disabled>-- Select an item --</option>
+                        {% for item in items %}
+                            <option value="{{ item.id }}" data-current-stock="{{ item.quantity }}">
+                                {{ item.name }} (Current Stock: {{ item.quantity_in_stock }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">
+                        Please select an item
+                    </div>
+                    <small class="form-text text-muted">
+                        Select the item you're adding to inventory
+                    </small>
+                </div>
+
+                <!-- Quantity Input -->
+                <div class="form-group mb-4">
+                    <label for="quantity" class="form-label fw-bold">Quantity</label>
+                    <div class="input-group">
+                        <input type="number" name="quantity" class="form-control form-control-lg" 
+                               min="1" step="1" required id="quantityInput">
+                        <span class="input-group-text">units</span>
+                    </div>
+                    <div class="invalid-feedback">
+                        Please enter a valid quantity (minimum 1)
+                    </div>
+                    <small class="form-text text-muted">
+                        Enter the number of units being added
+                    </small>
+                </div>
+
+                <!-- Supplier Input -->
+                <div class="form-group mb-4">
+                    <label for="supplier" class="form-label fw-bold">Supplier Information</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-truck"></i></span>
+                        <input type="text" name="supplier" class="form-control form-control-lg" 
+                               placeholder="Optional supplier name">
+                    </div>
+                    <small class="form-text text-muted">
+                        Enter supplier name or leave blank if not applicable
+                    </small>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between mt-4">
+                    
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-plus-circle mr-2"></i>Add Stock
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.getElementsByClassName('needs-validation');
+        
+        // Loop over them and prevent submission
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Update placeholder text based on selected item
+document.querySelector('select[name="item"]').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const currentStock = selectedOption.dataset.currentStock;
+    document.getElementById('quantityInput').placeholder = `Current stock: ${currentStock}`;
+});
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .form-control-lg, .btn-lg {
+        padding: 0.75rem 1.25rem;
+        font-size: 1.1rem;
+    }
+    
+    .form-select {
+        cursor: pointer;
+    }
+    
+    .invalid-feedback {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+    
+    .was-validated .form-control:invalid, 
+    .was-validated .form-select:invalid {
+        border-color: #dc3545;
+    }
+    
+    .was-validated .form-control:invalid ~ .invalid-feedback,
+    .was-validated .form-select:invalid ~ .invalid-feedback {
+        display: block;
+    }
+</style>
+{% endblock %}

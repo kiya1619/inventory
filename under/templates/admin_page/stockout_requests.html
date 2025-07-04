@@ -1,0 +1,292 @@
+{% extends 'admin_page/base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Stock Requests</h1>
+    </div>
+    
+    <!-- Filter and Search Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="mb-0">All Requests</h5>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Search Form -->
+                    <form method="get" class="me-2" role="search">
+                        <div class="input-group">
+                            <input type="search" 
+                                   name="q" 
+                                   class="form-control form-control-sm" 
+                                   placeholder="Search requests..."
+                                   value="{{ request.GET.q|default:'' }}"
+                                   aria-label="Search">
+                            {% if request.GET.status %}
+                                <input type="hidden" name="status" value="{{ request.GET.status }}">
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Status Filter Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                type="button" 
+                                id="filterDropdown" 
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
+                            <li><a class="dropdown-item" href="?status=pending">Pending</a></li>
+                            <li><a class="dropdown-item" href="?status=approved">Approved</a></li>
+                            <li><a class="dropdown-item" href="?status=rejected">Rejected</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="?">All Requests</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Requests Table Card -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Requester</th>
+                            <th>Department</th>
+                            <th>Item</th>
+                            <th>Quantity</th>
+                            <th>Request Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in stock_requests %}
+                        <tr>
+                            <td>{{ request.request_id }}</td>
+                            <td>{{ request.department_user.get_full_name }}</td>
+                            <td>{{ request.department.name }}</td>
+                            <td>{{ request.item.name }}</td>
+                            <td>{{ request.requested_quantity }}</td>
+                            <td>{{ request.request_date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if request.status == 'Approved' %}bg-success
+                                    {% elif request.status == 'Rejected' %}bg-danger
+                                    {% else %}bg-warning text-dark{% endif %}">
+                                    {{ request.status|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#detailModal{{ forloop.counter }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                    <p>No stock requests found</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Detail Modals -->
+{% for request in stock_requests %}
+<div class="modal fade" id="detailModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Details #{{ request.request_id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Requester Information -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 border-0 shadow-none">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Requester Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-5">Name:</dt>
+                                    <dd class="col-sm-7">{{ request.department_user.get_full_name|default:request.department_user.username }}</dd>
+                                    
+                                    <dt class="col-sm-5">Department:</dt>
+                                    <dd class="col-sm-7">{{ request.department.name }}</dd>
+                                    
+                                    <dt class="col-sm-5">Request Date:</dt>
+                                    <dd class="col-sm-7">{{ request.request_date|date:"M d, Y H:i" }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Request Details -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 border-0 shadow-none">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">Request Details</h6>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-5">Item:</dt>
+                                    <dd class="col-sm-7">{{ request.item.name }}</dd>
+                                    
+                                    <dt class="col-sm-5">Requested Quantity:</dt>
+                                    <dd class="col-sm-7">{{ request.requested_quantity }}</dd>
+                                    
+                                    <dt class="col-sm-5">Reason:</dt>
+                                    <dd class="col-sm-7">{{ request.reason|default:"-" }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Approval Details (if approved/rejected) -->
+                {% if request.status != 'pending' %}
+                <div class="card border-0 shadow-none">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Approval Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Status:</dt>
+                            <dd class="col-sm-9">
+                                <span class="badge 
+                                    {% if request.status == 'Approved' %}bg-success
+                                    {% elif request.status == 'Rejected' %}bg-danger
+                                    {% else %}bg-warning text-dark{% endif %}">
+                                    {{ request.status|title }}
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-3">Approved By:</dt>
+                            <dd class="col-sm-9">{{ request.approved_by.get_full_name|default:request.approved_by.username }}</dd>
+                            
+                            <dt class="col-sm-3">Approved Quantity:</dt>
+                            <dd class="col-sm-9">{{ request.approved_quantity|default:"-" }}</dd>
+                            
+                            <dt class="col-sm-3">Approved Date:</dt>
+                            <dd class="col-sm-9">{{ request.approved_date|date:"M d, Y H:i"|default:"-" }}</dd>
+                            
+                            {% if request.notes %}
+                            <dt class="col-sm-3">Notes:</dt>
+                            <dd class="col-sm-9">{{ request.notes }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                {% if request.status == 'pending' %}
+                <button type="button" class="btn btn-success">
+                    <i class="fas fa-check"></i> Approve
+                </button>
+                <button type="button" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+                {% endif %}
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<style>
+    .table th {
+        font-weight: 600;
+        color: #495057;
+        white-space: nowrap;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .badge {
+        font-size: 0.85em;
+        padding: 0.5em 0.75em;
+    }
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+    .modal-body .card {
+        border: 1px solid rgba(0,0,0,.1);
+    }
+    dt {
+        font-weight: 500;
+        color: #6c757d;
+    }
+</style>
+
+{% endblock %}

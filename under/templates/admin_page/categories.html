@@ -1,0 +1,96 @@
+{% extends 'admin_page/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-primary">Product Categories</h1>
+        <a href="{% url 'add_category' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add New Category
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% if categories %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Category Name</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Products</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>
+                                <strong>{{ category.name }}</strong>
+                                {% if category.is_featured %}
+                                <span class="badge bg-warning text-dark ms-2">Featured</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ category.description|truncatechars:50|default:"-" }}</td>
+                            <td>{{ category.products.count }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>Edit
+                                    </a>
+                                    <a href="" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-box-open fa-3x text-muted"></i>
+                </div>
+                <h4 class="text-muted">No Categories Found</h4>
+                <p class="text-muted">Start by adding your first product category</p>
+                <a href="{% url 'add_category' %}" class="btn btn-primary mt-3">
+                    <i class="fas fa-plus me-2"></i>Add Category
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .badge {
+        font-size: 0.75em;
+        font-weight: 500;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
